@@ -7,7 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.12.0/dist/tf.min.js" crossorigin="anonymous"></script>
-  <script type="text/javascript" src="classnames.json"></script>
+  <!-- <script type="text/javascript" src="https://raw.githubusercontent.com/HarshaSomaraju/gesture-recognition/main/classnames.json"></script> -->
   <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-node@3.12.0/dist/index.min.js" crossorigin="anonymous"></script> -->
 <style>
   #output{
@@ -27,7 +27,7 @@
 
   <script type="module">
     const model = await tf.loadLayersModel("https://raw.githubusercontent.com/HarshaSomaraju/gesture-recognition/main/model/model.json");
-    const labels = JSON.parse(data);
+    const labels = ['okay', 'peace', 'thumbs up', 'thumbs down', 'call me', 'stop', 'rock', 'live long', 'fist', 'smile'];
     const outputElement = document.getElementById('output');
     const videoElement = document.getElementsByClassName('input_video')[0];
     videoElement.style.display = 'none';
