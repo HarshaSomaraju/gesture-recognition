@@ -7,19 +7,28 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.12.0/dist/tf.min.js" crossorigin="anonymous"></script>
+  <script type="text/javascript" src="classnames.json"></script>
   <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-node@3.12.0/dist/index.min.js" crossorigin="anonymous"></script> -->
+<style>
+  #output{
+    position: absolute;
+    right: 60px;
+    top: 50%;
+  }
+</style>
 </head>
 
 <body>
-  <input type="file" id="upload-json"/>
-  <input type="file" id="upload-weights"/>
   <div class="container">
-    <video class="input_video"></video>
-    <canvas class="output_canvas" width="1280px" height="720px"></canvas>
+    <video class="input_video"></video> 
+    <canvas class="output_canvas" width="1280px" height="720px">  <h2>Stop</h2></canvas>
   </div>
+  <h2 id='output'></h2>
+
   <script type="module">
-    const uploadJSONInput = document.getElementById('upload-json');
-    const uploadWeightsInput = document.getElementById('upload-weights');
+    const model = await tf.loadLayersModel("https://raw.githubusercontent.com/HarshaSomaraju/gesture-recognition/main/model/model.json");
+    const labels = JSON.parse(data);
+    const outputElement = document.getElementById('output');
     const videoElement = document.getElementsByClassName('input_video')[0];
     videoElement.style.display = 'none';
     const canvasElement = document.getElementsByClassName('output_canvas')[0];
@@ -32,10 +41,27 @@
           results.image, 0, 0, canvasElement.width, canvasElement.height);
       if (results.multiHandLandmarks) {
         for (const landmarks of results.multiHandLandmarks) {
+          var lds = [[]];
+          for(const lm of landmarks) {
+            var lmx = lm.x * 1280;
+            var lmy = lm.y * 720;
+            lds[0].push([lmx, lmy]);
+          }
+          var tflds = tf.tensor(lds);
+          console.log(tflds);
+          const prediction = model.predict(tflds);
+          // prediction.as1D().argMax().print();
+          const pred = prediction.as1D().argMax().dataSync()[0];
+          console.log('Prediction is: ');
+          console.log(labels[pred]);
+          outputElement.innerText = labels[pred];
           drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
                          {color: '#00FF00', lineWidth: 5});
           drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 2});
         }
+      }
+      else{
+        outputElement.innerText = '';
       }
       canvasCtx.restore();
     }
@@ -50,17 +76,18 @@
       minTrackingConfidence: 0.5
     });
     hands.onResults(onResults);
+    var a;
     
     const camera = new Camera(videoElement, {
       onFrame: async () => {
-        await hands.send({image: videoElement});
+        a = await hands.send({image: videoElement});
+        console.log(a);
         // const handler = tfnode.io.fileSystem('model.json');
-        const model = await tf.loadLayersModel(tf.io.browserFiles(
- [uploadJSONInput.files[0], uploadWeightsInput.files[0]]));
-        const example = tf.fromPixels(videoElement);
-        const prediction = model.predict(example);
-        console.log('Prediction is: ');
-        console.log(prediction);
+        // const model = await tf.loadLayersModel("https://raw.githubusercontent.com/HarshaSomaraju/gesture-recognition/main/model/model.json");
+        // const example = tf.browser.fromPixels(videoElement);
+        // const prediction = model.predict(example);
+        // console.log('Prediction is: ');
+        // console.log(prediction);
       },
       width: 1280,
       height: 720
